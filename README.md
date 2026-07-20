@@ -1,79 +1,76 @@
-# 🚀 Production LLM & RAG API with LangChain
+# Production LLM and RAG API with LangChain
 
-An enterprise-ready, high-performance production API wrapper built for LLM agents and Retrieval-Augmented Generation (RAG). Powered by **FastAPI**, **LangChain**, **Pydantic V2**, and **LangSmith** for observability, caching, and robust production-grade reliability.
-
----
-
-## 🌟 Key Features
-
-- **⚡ High-Performance Gateway**: Built on FastAPI with asynchronous routing for fast response times.
-- **🧠 LangChain Agent Pipeline**: Advanced agent workflows integrating OpenAI models with automated fallback routing (`gpt-4o-mini` ➔ `gpt-5-mini` / fallbacks).
-- **🕵️ LangSmith Observability**: Built-in production tracing, evaluation, and logging out-of-the-box.
-- **🛡️ Production-Grade Security**: Rate limiting, API key validation, and request sanitization.
-- **💾 Smart Caching Layer**: Configurable cache TTL to reduce redundant LLM calls and control costs.
-- **📊 Real-time Metrics & Health Checks**: Track latency, cache hit rate, token counts, and system environment status.
-- **⚙️ Centralized Settings Management**: Environment validation using `pydantic-settings` to avoid missing configuration errors at startup.
+An enterprise-ready production API wrapper built for LLM agents and Retrieval-Augmented Generation (RAG). Powered by FastAPI, LangChain, Pydantic V2, and LangSmith for observability, caching, and production-grade reliability.
 
 ---
 
-## 🛠️ Project Structure
+## Key Features
+
+- High-performance gateway built on FastAPI with asynchronous routing for fast response times.
+- LangChain agent pipeline with OpenAI models and automated fallback routing.
+- LangSmith observability with tracing, evaluation, and logging.
+- Production-grade security with rate limiting, API key validation, and request sanitization.
+- Smart caching layer with configurable TTL to reduce redundant LLM calls.
+- Metrics and health checks for latency, cache hit rate, token usage, and system status.
+- Centralized configuration validation using pydantic-settings.
+
+---
+
+## Project Structure
 
 ```text
 production-api/
 ├── app/
 │   ├── __init__.py
 │   ├── main.py          # FastAPI application entry point
-│   ├── agent.py         # LangChain Agent and RAG logic
+│   ├── agent.py         # LangChain agent and RAG logic
 │   ├── cache.py         # Memory/Redis caching mechanism
 │   ├── config.py        # Validated configuration settings via Pydantic
 │   ├── models.py        # Pydantic schemas for requests and responses
-│   ├── monitering.py    # Health & latency metrics instrumentation
-│   └── security.py      # Rate limiter & API security utilities
+│   ├── monitering.py    # Health and latency metrics instrumentation
+│   └── security.py      # Rate limiter and API security utilities
 ├── tests/               # Unit and integration tests
-├── .env                 # Environment variables (secrets)
-├── pyproject.toml       # Dependencies managed with uv
+├── .env                 # Environment variables
+├── pyproject.toml       # Project dependencies and metadata
 ├── test.py              # Configuration self-test script
-└── README.md            # You are here!
+└── README.md            # Project documentation
 ```
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
-### 📋 Prerequisites
+### Prerequisites
 
-- **Python**: `>= 3.12`
-- **Package Manager**: [uv](https://github.com/astral-sh/uv) (recommended) or `pip`
+- Python 3.12 or later
+- Package manager: uv (recommended) or pip
 
-### 🔧 Installation
+### Installation
 
-1. **Clone the Repository**:
+1. Clone the repository:
    ```bash
    git clone https://github.com/Mekin-jema/Production-RAG-with-Langchain.git
    cd Production-RAG-with-Langchain
    ```
 
-2. **Setup Virtual Environment & Install Dependencies**:
+2. Install dependencies:
    ```bash
    uv sync
    ```
-   *This automatically creates a `.venv` and installs all dependencies specified in `pyproject.toml`.*
+   This command creates a `.venv` and installs dependencies from `pyproject.toml`.
 
-3. **Configure Environment Variables**:
-   Create a `.env` file in the root directory:
+3. Configure environment variables:
+   Create a `.env` file in the project root:
    ```env
-   # LLM Credentials
    OPENAI_API_KEY=your_openai_api_key_here
    PRIMARY_MODEL=gpt-4o-mini
    FALLBACK_MODEL=gpt-4o
 
-   # LangSmith Monitoring (Optional but recommended)
    LANGSMITH_TRACING_V2=true
    LANGSMITH_ENDPOINT=https://api.smith.langchain.com
    LANGSMITH_API_KEY=your_langsmith_api_key_here
    LANGSMITH_PROJECT=production-api
 
-   # App Settings
    APP_ENV=development
    LOG_LEVEL=INFO
    RATE_LIMIT=20/min
@@ -81,38 +78,39 @@ production-api/
    MAX_RETRIES=3
    ```
 
-4. **Verify Configuration**:
+4. Verify configuration:
    ```bash
    uv run python test.py
    ```
 
 ---
 
-## 🏃 Running the Application
+## Running the Application
 
-Start the FastAPI development server using `uv`:
+Start the FastAPI server in development mode:
 
 ```bash
 uv run uvicorn app.main:app --reload
 ```
 
-The API will be available at `http://127.0.0.1:8000`.
-Interactive Swagger UI documentation is served at `http://127.0.0.1:8000/docs`.
+The API is available at `http://127.0.0.1:8000`.
+The Swagger UI documentation is available at `http://127.0.0.1:8000/docs`.
 
 ---
 
-## 📡 API Endpoints Reference
+## API Endpoints
 
-### 1. Chat Completion / Agent Execution
-* **Endpoint**: `POST /api/v1/chat`
-* **Request Body** ([ChatRequest](file:///c:/Users/Mekin.Jemal/OneDrive%20-%20Safaricom%20Ethiopia/Desktop/Projects/LLM/production-api/app/models.py#L9-L25)):
+### Chat Completion / Agent Execution
+
+- Endpoint: `POST /api/v1/chat`
+- Request body:
   ```json
   {
     "message": "Explain the concept of quantum computing briefly.",
     "thread_id": "session_123"
   }
   ```
-* **Response Body** ([ChatResponse](file:///c:/Users/Mekin.Jemal/OneDrive%20-%20Safaricom%20Ethiopia/Desktop/Projects/LLM/production-api/app/models.py#L26-L36)):
+- Response body:
   ```json
   {
     "response": "Quantum computing is a type of computation whose operations can harness the phenomena of quantum mechanics...",
@@ -124,9 +122,10 @@ Interactive Swagger UI documentation is served at `http://127.0.0.1:8000/docs`.
   }
   ```
 
-### 2. System Health Status
-* **Endpoint**: `GET /health`
-* **Response Body** ([HealthResponse](file:///c:/Users/Mekin.Jemal/OneDrive%20-%20Safaricom%20Ethiopia/Desktop/Projects/LLM/production-api/app/models.py#L37-L43)):
+### System Health Status
+
+- Endpoint: `GET /health`
+- Response body:
   ```json
   {
     "status": "healthy",
@@ -139,9 +138,10 @@ Interactive Swagger UI documentation is served at `http://127.0.0.1:8000/docs`.
   }
   ```
 
-### 3. Usage Metrics
-* **Endpoint**: `GET /metrics`
-* **Response Body** ([MetricsResponse](file:///c:/Users/Mekin.Jemal/OneDrive%20-%20Safaricom%20Ethiopia/Desktop/Projects/LLM/production-api/app/models.py#L44-L53)):
+### Usage Metrics
+
+- Endpoint: `GET /metrics`
+- Response body:
   ```json
   {
     "total_requests": 1402,
@@ -156,9 +156,9 @@ Interactive Swagger UI documentation is served at `http://127.0.0.1:8000/docs`.
 
 ---
 
-## 🧪 Testing
+## Testing
 
-Run unit and integration tests using `pytest`:
+Run unit and integration tests with pytest:
 
 ```bash
 uv run pytest
@@ -166,6 +166,6 @@ uv run pytest
 
 ---
 
-## 📜 License
+## License
 
 This project is licensed under the MIT License.

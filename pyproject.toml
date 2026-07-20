@@ -12,6 +12,7 @@ dependencies = [
     "langsmith>=0.10.6",
     "pydantic-settings>=2.14.2",
     "python-dotenv>=1.2.2",
+    "slowapi>=0.1.10",
     "truststore>=0.10.4",
     "uvicorn>=0.51.0",
 ]
