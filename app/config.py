@@ -6,11 +6,11 @@
 
 
 
-from pydantic_settings import BaseSettings
-from functools  import lru_cache
+from pydantic_settings import BaseSettings # used to  load env ,validate and store them
+from functools  import lru_cache # used to cache the settings instance
 
 
-class Settings(BaseSettings):
+class Settings(BaseSettings): # inherit from BaseSettings to load env variables
 
     # LLM Configuration
     # openai_api_key:str
