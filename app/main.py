@@ -11,8 +11,6 @@ Wires together:
 - Health checks
 """
 
-import time
-import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, HTTPException
@@ -105,7 +103,6 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
             "detail": "Too many requests. Please slow down.",
         },
     )
-    
 
 # =============================================
 # ENDPOINTS
