@@ -157,30 +157,6 @@ production-api/
 
 ---
 
-## 🚀 Advanced RAG Reference Patterns
-
-The `advanced/` directory contains educational reference implementations designed for adaptation into production environments:
-
-### 1. Long Context vs. RAG (`advanced/01_long_context_vs_rag.py`)
-Compares performance, latency, and cost implications between stuffing an entire document corpus into an LLM's context window versus retrieving specific chunks using RAG.
-
-### 2. Contextual Retrieval (`advanced/02_contextual_retrieval.py`)
-Precludes chunk ambiguity by utilizing an LLM to generate a short contextual prefix (document metadata, key themes) and prepending it to each chunk before indexing.
-
-### 3. Late Chunking (`advanced/03_late_chunking.py`)
-Computes embeddings on full text segments first, and then divides token-level embeddings into chunk vectors. This preserves cross-chunk semantic references (e.g., pronouns).
-
-### 4. Agentic RAG (`advanced/04_agentic_rag.py`)
-An iterative flow: `Retrieve -> Grade -> [Rewrite -> Retrieve]* -> Generate/Fallback`. The system grades retrieved documents and loops to rewrite the query if relevance metrics fall below thresholds.
-
-### 5. GraphRAG (`advanced/05_graphrag_intro.py`)
-Introduces knowledge graph construction (extracting entities and relations) and traversal for multi-hop questions where vector distance search alone is insufficient.
-
-### 6. Multimodal RAG (`advanced/06_multimodal_rag.py`)
-A demonstration of parsing and querying documents containing visual and structural layouts (e.g. PDFs with charts, images, and tables) by converting pages to images and retrieving them using vision-capable LLMs.
-
----
-
 ## 🧪 Testing
 
 The repository uses `pytest` for unit and integration tests.
