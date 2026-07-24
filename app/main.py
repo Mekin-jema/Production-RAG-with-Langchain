@@ -123,6 +123,53 @@ async def chat(request: Request, body: ChatRequest):
     5. Cache store
     6. Return response
     """
+
+#     '''
+#     class RequestTimer:
+#     def __enter__(self):
+#         print("Timer started")
+#         return self
+
+#     def __exit__(self, exc_type, exc_value, traceback):
+#         print("Timer stopped")
+
+ 
+#   '''
+#    with RequestTimer() as timer:
+#     print("Processing request...")
+#    '''
+    #              User Request
+    #                   |
+    #                   v
+    #           RequestTimer START
+    #                   |
+    #                   v
+    #           Security Check
+    #                   |
+    #       +-----------+-----------+
+    #       |                       |
+    #    Blocked                Allowed
+    #       |                       |
+    #    Return               Cache Lookup
+    #                               |
+    #                  +------------+------------+
+    #                  |                         |
+    #               Cache Hit               Cache Miss
+    #                  |                         |
+    #              Return              LangGraph Agent
+    #                                          |
+    #                                          v
+    #                                   LLM + Retrieval
+    #                                          |
+    #                                          v
+    #                                 Output Validation
+    #                                          |
+    #                                          v
+    #                                    Save Cache
+    #                                          |
+    #                                          v
+    #                               RequestTimer END
+
     with RequestTimer() as timer:
         security_notes = []
 
