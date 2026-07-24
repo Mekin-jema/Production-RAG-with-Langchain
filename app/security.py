@@ -5,11 +5,105 @@ Input sanitization, PII detection/masking, output validation.
 
 import re
 from typing import Optional
-from langsmith import traceable
+
+# 
+#                               ┌──────────────────────────┐
+#                               │      User Request        │
+#                               └────────────┬─────────────┘
+#                                            │
+#                                            ▼
+#                      ┌────────────────────────────────────┐
+#                      │ SecurityPipeline.check_input()     │
+#                      └────────────────┬───────────────────┘
+#                                       │
+#              ┌────────────────────────┴────────────────────────┐
+#              ▼                                                 ▼
+#  ┌──────────────────────────────┐                 ┌─────────────────────────────┐
+#  │ InputSanitizer.check()       │                 │ Prompt Injection Patterns   │
+#  │                              │                 │                             │
+#  │ • ignore previous...         │                 │ Regex Matching              │
+#  │ • reveal system prompt       │──────────────►  │ re.compile(...).search()    │
+#  │ • bypass restrictions        │                 │                             │
+#  └──────────────┬───────────────┘                 └──────────────┬──────────────┘
+#                 │                                                │
+#         Safe?   │                                                │ Unsafe
+#          Yes    ▼                                                ▼
+#         ┌──────────────────────────────┐              ┌─────────────────────────┐
+#         │ InputSanitizer.clean()       │              │ BLOCK REQUEST           │
+#         │                              │              │                         │
+#         │ Remove ----                  │              │ Return False            │
+#         │ Remove ====                  │              │ HTTP 400                │
+#         │ Escape {{ }}                 │              │ Log Warning             │
+#         └──────────────┬───────────────┘              └─────────────────────────┘
+#                        │
+#                        ▼
+#           ┌───────────────────────────────┐
+#           │ PIIDetector.detect()          │
+#           │                               │
+#           │ Email                         │
+#           │ Phone                         │
+#           │ SSN                           │
+#           │ Credit Card                   │
+#           └──────────────┬────────────────┘
+#                          │
+#                PII Found?
+#                  │
+#          ┌───────┴─────────┐
+#          │                 │
+#         No                Yes
+#          │                 │
+#          │                 ▼
+#          │      ┌────────────────────────────┐
+#          │      │ PIIDetector.mask()         │
+#          │      │                            │
+#          │      │ john@test.com              │
+#          │      │        ↓                   │
+#          │      │ [EMAIL REDACTED]           │
+#          │      └─────────────┬──────────────┘
+#          │                    │
+#          └────────────────────┘
+#                       │
+#                       ▼
+#           ┌──────────────────────────────┐
+#           │ Safe Input Sent to LangGraph │
+#           └──────────────┬───────────────┘
+#                          │
+#                          ▼
+#                 ┌──────────────────┐
+#                 │   LangGraph LLM  │
+#                 └────────┬─────────┘
+#                          │
+#                          ▼
+#       ┌────────────────────────────────────────┐
+#       │ SecurityPipeline.check_output()        │
+#       └────────────────┬───────────────────────┘
+#                        │ 
+#                        ▼
+#          ┌────────────────────────────────────┐
+#          │ OutputValidator.validate()         │
+#          └──────────────┬─────────────────────┘
+#                         │
+#         ┌───────────────┼────────────────────────┐
+#         ▼               ▼                        ▼
+#  ┌──────────────┐ ┌──────────────┐      ┌────────────────┐
+#  │ Detect PII   │ │ Harmful      │      │ Clean Response │
+#  │ in response  │ │ Content      │      │                │
+#  └──────┬───────┘ └──────┬───────┘      └──────┬─────────┘
+#         │                │                     │
+#    PII Found?      Harmful?                    │
+#         │                │                     │
+#    ┌────┴────┐      ┌────┴────┐                │
+#    │ Mask PII│      │ Block   │                │
+#    │         │      │ Output  │                │
+#    └────┬────┘      └────┬────┘                │
+#         └────────────┬───┘─────────────────────┘
+#                      │
+#                      ▼
+#             ┌───────────────────────┐
+#             │ Response to the User  │
+#             └───────────────────────┘
 
 # === Input Sanitization ===
-
-
 class InputSanitizer:
     """
     Sanitize user input before it reaches the LLM.
@@ -145,7 +239,6 @@ class SecurityPipeline:
         self.pii_detector = PIIDetector()
         self.output_validator = OutputValidator()
 
-    @traceable(name="security_check_input")
     def check_input(self, text: str) -> tuple[bool, str, list[str]]:
         """
         Process input through security checks.
@@ -169,7 +262,6 @@ class SecurityPipeline:
 
         return True, cleaned, notes
 
-    @traceable(name="security_check_output")
     def check_output(self, text: str) -> tuple[str, list[str]]:
         """
         Validate output before returning to client.

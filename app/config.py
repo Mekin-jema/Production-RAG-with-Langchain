@@ -1,7 +1,14 @@
-"""
-Centralized Configuration
-Uses pydantic-settings for validated environment variables.
-"""
+import ssl
+try:
+    ssl._create_default_https_context = ssl._create_unverified_context
+except AttributeError:
+    pass
+
+try:
+    import truststore
+    truststore.inject_into_ssl()
+except ImportError:
+    pass
 
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
@@ -13,16 +20,10 @@ load_dotenv()
 class Settings(BaseSettings):
     
     # LLM Configuration
-    openai_api_key: str
-    primary_model: str = "gpt-4o-mini"
-    fallback_model: str = "gpt-4o-mini"
-    
-    # LangSmith
-    langchain_tracing_v2: bool = True
-    langchain_api_key: str = ""
-    langchain_project: str = "production-api"
-    
-    
+    openrouter_api_key: str
+    openrouter_base_url: str = "https://openrouter.ai/api/v1"
+    primary_model: str = "openai/gpt-4o-mini"
+    fallback_model: str = "openai/gpt-4o-mini"
     # Application
     app_env: str = "development"
     log_level: str = "INFO"
@@ -41,3 +42,4 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """Cached settings instance - loaded once, reused everywhere."""
     return Settings()
+

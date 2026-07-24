@@ -11,6 +11,16 @@ Wires together:
 - Health checks
 """
 
+import ssl
+try:
+    ssl._create_default_https_context = ssl._create_unverified_context
+except AttributeError:
+    pass
+
+import truststore
+
+# Must be called before making HTTPS requests
+truststore.inject_into_ssl()
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, HTTPException
@@ -18,7 +28,6 @@ from fastapi.responses import JSONResponse
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from langsmith import traceable
 from dotenv import load_dotenv
 
 from app.config import get_settings
@@ -58,7 +67,7 @@ async def lifespan(app: FastAPI):
     logger.info("Starting production API...", extra={"extra_data": {
         "environment": settings.app_env,
         "primary_model": settings.primary_model,
-        "tracing_enabled": settings.langchain_tracing_v2,
+        # "tracing_enabled": settings.langsmith_tracing_v2,
     }})
 
     # Initialize components
@@ -110,7 +119,7 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
 
 @app.post("/chat", response_model=ChatResponse)
 @limiter.limit(get_settings().rate_limit)
-@traceable(name="chat_endpoint")
+# @traceable(name="chat_endpoint")
 async def chat(request: Request, body: ChatRequest):
     """
     Main chat endpoint.
@@ -189,7 +198,7 @@ async def chat(request: Request, body: ChatRequest):
             )
 
         # ---- Step 2: Cache Lookup ----
-        cached_response = cache.get(cleaned_message)
+        cached_response = cache.get(cleaned_message) # what is the clean messsage looks like 
         if cached_response is not None:
             metrics.record_request(latency_ms=0, cache_hit=True)
             logger.info("Cache hit", extra={"extra_data": {

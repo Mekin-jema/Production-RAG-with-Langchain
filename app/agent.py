@@ -9,9 +9,35 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
-from langsmith import traceable
 
 from app.config import get_settings
+
+#                  User Message
+
+#                    START
+    #                 │
+    #                 ▼
+    #           process node
+    #                 │
+    #      route_after_process()
+    #                 │
+    #   ┌─────────────┼──────────────┐
+    #   ▼             ▼              ▼
+    # done        fallback         error
+    #   │             │              │
+    #   ▼             ▼              ▼
+    #  END   route_after_fallback    │
+    #                 │              │
+    #          ┌──────┴──────┐       │
+    #          ▼             ▼       │
+    #        done         error      │
+    #          │             │       │
+    #          ▼             ▼       ▼
+    #         END      handle_error
+    #                          │
+    #                          ▼
+    #                         END
+
 
 
 # === Agent State ===
@@ -44,14 +70,16 @@ class ProductionAgent:
             temperature=0,
             timeout=30,
             max_retries=0,  # We handle retries ourselves
-            api_key=settings.openai_api_key,
+            api_key=settings.openrouter_api_key,
+            base_url=settings.openrouter_base_url,
         )
         self.fallback_llm = ChatOpenAI(
             model=settings.fallback_model,
             temperature=0,
             timeout=30,
             max_retries=0,
-            api_key=settings.openai_api_key,
+            api_key=settings.openrouter_api_key,
+            base_url=settings.openrouter_base_url,
         )
         self.max_retries = settings.max_retries
         self.graph = self._build_graph()
@@ -69,6 +97,7 @@ class ProductionAgent:
                     "model_used": "primary",
                 }
             except Exception as e:
+                print(f"PRIMARY LLM EXCEPTION: {e}")
                 return {
                     "error": str(e),
                     "retry_count": state["retry_count"] + 1,
@@ -85,6 +114,7 @@ class ProductionAgent:
                     "model_used": "fallback",
                 }
             except Exception as e:
+                print(f"FALLBACK LLM EXCEPTION: {e}")
                 return {
                     "error": str(e),
                     "model_used": "",
@@ -140,7 +170,6 @@ class ProductionAgent:
 
         return graph.compile()
 
-    @traceable(name="production_agent_invoke")
     def invoke(self, message: str) -> dict:
         """
         Invoke the agent with a user message.
